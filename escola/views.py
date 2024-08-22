@@ -2,21 +2,27 @@ from escola.models import Estudante, Curso, Matricula
 from escola.serializers import EstudanteSerializer, CursoSerializer, MatriculaSerializer, ListaMatriculasCursoSerializer, ListaMatriculasEstudanteSerializer
 from rest_framework import viewsets, generics, filters
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.throttling import UserRateThrottle
+from escola.throttles import MatriculaAnonRateThrottle
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 class EstudanteViewSet(viewsets.ModelViewSet):
-    queryset = Estudante.objects.all()
+    queryset = Estudante.objects.all().order_by('id')
     serializer_class = EstudanteSerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
     ordering_fields = ['nome']
     search_fields = ['nome', 'cpf']
 
 class CursoViewSet(viewsets.ModelViewSet):
-    queryset = Curso.objects.all()
+    queryset = Curso.objects.all().order_by('id')
     serializer_class = CursoSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
 class MatriculaViewSet(viewsets.ModelViewSet):
-    queryset = Matricula.objects.all()
+    queryset = Matricula.objects.all().order_by('id')
     serializer_class = MatriculaSerializer
+    throttle_classes = [UserRateThrottle, MatriculaAnonRateThrottle]
+    http_method_names = ['get', 'post']
 
 class ListaMatriculaEstudante(generics.ListAPIView):
     def get_queryset(self):
